@@ -13,7 +13,7 @@ Latent Dirichlet allocation(LDA) is a unsupersived machine learning mathod that 
   * talk.politics.guns : 54684, 54380, 54215, 53296
 		
 #Data Preprocessing
-   1. Stopword list download from [link](http://www.lextek.com/manuals/onix/stopwords1.html)
+   1. Stopword list download from [[link](http://www.lextek.com/manuals/onix/stopwords1.html)].
    This stopword list is probably the most widely used stopword list. 
    It covers a wide number of stopwords without getting too aggressive and including too many words which a user might search upon. 
    This wordlist contains 429 words.
@@ -21,8 +21,8 @@ Latent Dirichlet allocation(LDA) is a unsupersived machine learning mathod that 
    2. Stemming using [Snowball Stemmer](http://snowball.tartarus.org/download.html) java version
    
 #Reference
-  1. [David M. Blei Topic Modeling](http://www.cs.columbia.edu/~blei/topicmodeling.html) 
-  2. [Liu Yang's LDAGibbsSampling](https://github.com/yangliuy/LDAGibbsSampling) 
-  3. Blei, David M., Ng, Andrew Y., and Jordan, Michael I. 2003. Latent dirichlet allocation. Journal of Machine Learning Research. 3 (Mar. 2003), 993-1022[pdf](http://www.cs.princeton.edu/picasso/mats/BleiNgJordan2003_blei.pdf) 
+  1. [David M. Blei Topic Modeling](http://www.cs.columbia.edu/~blei/topicmodeling.html) .
+  2. [Liu Yang's LDAGibbsSampling](https://github.com/yangliuy/LDAGibbsSampling) .
+  3. Blei, David M., Ng, Andrew Y., and Jordan, Michael I. 2003. Latent dirichlet allocation. Journal of Machine Learning Research. 3 (Mar. 2003), 993-1022[[pdf](http://www.cs.princeton.edu/picasso/mats/BleiNgJordan2003_blei.pdf)] .
 
  
