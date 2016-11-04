@@ -161,12 +161,11 @@ public class LDA extends TopicModel{
 	}
 	
 	/**
-	 * Print top 10 word in each topic 
+	 * Print top k word in each topic
+	 * @param top : top k number 
 	 */
-	public void printWordInTopic()
+	public void printWordInTopic(int top)
 	{
-		int top = 10;
-
 		for(int topic_index = 0; topic_index < phi.length; topic_index++)	
 		{	
 			System.out.print(topic_index+":\t");
@@ -189,8 +188,14 @@ public class LDA extends TopicModel{
 		}
 	}
 	
-	public void writeResult(String path_result) throws IOException
+	/**
+	 * Write phi matrix, theta matrix and top k topic words
+	 * @param path_result : output folder path
+	 * @param top : top k number
+	 */
+	public void writeResult(String path_result, int top) throws IOException
 	{
+		IO.mkdir(path_result);
 		//write phi matrix
 		BufferedWriter bw = IO.Writer(path_result + "phi.txt");
 		for(int topic_index = 0; topic_index < phi.length; topic_index++)
@@ -211,18 +216,17 @@ public class LDA extends TopicModel{
 			StringBuilder sb = new StringBuilder();
 			for(int topic_index = 0; topic_index < theta[doc_index].length; topic_index++)
 			{
-				sb.append(phi[doc_index][topic_index]+"\t");
+				sb.append(theta[doc_index][topic_index]+"\t");
 			}
 			bw.write(sb.toString()+"\n");
 		}
 		bw.close();
 		
 		//write word in each topic
-		int top = 10;
 		bw = IO.Writer(path_result + "result.txt");
 		for(int topic_index = 0; topic_index < phi.length; topic_index++)	
 		{	
-			System.out.print(topic_index+":\t");
+			bw.write(topic_index+":\t");
 			Map<String,Double> tmp_map = new HashMap<String,Double>();
 			for(int word_index = 0; word_index < phi[topic_index].length; word_index++)
 			{
@@ -234,11 +238,12 @@ public class LDA extends TopicModel{
 			int flag = 1;
 			for(Map.Entry<String, Double> e : tmp.entrySet())
 			{
-				System.out.print(e.getKey()+"\t");//+","+e.getValue()
+				bw.write(e.getKey()+"\t");//+","+e.getValue()
 				flag++;
 				if(flag>top) break;
 			}
-			System.out.println();
+			bw.write("\n");
 		}
+		bw.close();
 	}
 }
