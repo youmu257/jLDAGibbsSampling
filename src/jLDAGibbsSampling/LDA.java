@@ -222,6 +222,14 @@ public class LDA extends TopicModel{
 		}
 		bw.close();
 		
+		//write parameter matrix
+		bw = IO.Writer(path_result + "parameter.txt");
+		bw.write("alpha:"+alpha+"\n");
+		bw.write("beta:"+beta+"\n");
+		bw.write("topicSize:"+topicSize+"\n");
+		bw.write("iteration:"+iteration+"\n"); 
+		bw.close();
+		
 		//write word in each topic
 		bw = IO.Writer(path_result + "result.txt");
 		for(int topic_index = 0; topic_index < phi.length; topic_index++)	
