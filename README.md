@@ -4,6 +4,7 @@ Latent Dirichlet allocation(LDA) is a unsupersived machine learning mathod that 
 #Data
   Dataset download from [UCI Twenty Newsgroups](https://archive.ics.uci.edu/ml/datasets/Twenty+Newsgroups)
   Select five categories and four news in each category.
+  Each file represents a document.
   
   Described as follows:
   * rec.motorcycles : 102616, 104312, 104630, 104582
@@ -21,7 +22,7 @@ Latent Dirichlet allocation(LDA) is a unsupersived machine learning mathod that 
    2. Stemming using [Snowball Stemmer](http://snowball.tartarus.org/download.html) java version
    
 #Reference
-  1. [David M. Blei Topic Modeling](http://www.cs.columbia.edu/~blei/topicmodeling.html) .
+  1. [David M. Blei Blog for Topic Modeling](http://www.cs.columbia.edu/~blei/topicmodeling.html) .
   2. [Liu Yang's LDAGibbsSampling](https://github.com/yangliuy/LDAGibbsSampling) .
   3. Blei, David M., Ng, Andrew Y., and Jordan, Michael I. 2003. Latent dirichlet allocation. Journal of Machine Learning Research. 3 (Mar. 2003), 993-1022[[pdf](http://www.cs.princeton.edu/picasso/mats/BleiNgJordan2003_blei.pdf)] .
 
