@@ -17,11 +17,10 @@ public class Main {
 		//LDA gibbs sampling
 		LDA lda = new LDA();
 		/**
-		 * If you change parameter in file, e.g alpha, beta, topicSize, iteration.
-		 * You need to reload new parameter.
-		 * Using lda.readParameter("data//parameter.txt") to reload.
+		 * If you need to reset parameter.
+		 * Using lda.setParameter(alpha, beta, topicSize, iteration) to reset.
 		 */
-		lda.readParameter("data//Parameter//parameter.txt");
+		lda.setParameter(0.5, 0.1, 10, 100);
 		
 		lda.LDA_Gibbs_Sampling(doc);
 		lda.printWordInTopic(10);

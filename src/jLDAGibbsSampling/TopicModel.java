@@ -68,27 +68,11 @@ abstract class TopicModel {
 		return newTopic;
 	}
 	
-	
-	public void readParameter(String path) throws IOException
+	public void setParameter(double alpha, double beta, int topicSize, int iteration) throws IOException
 	{
-		BufferedReader br = IO.Reader(path);
-		String lin ="";
-		while((lin = br.readLine()) != null)
-		{
-			String[] parameter = lin.split(":");
-			if(parameter[0].compareTo("alpha") == 0){
-				this.alpha = Double.parseDouble(parameter[1]);
-			}
-			else if(parameter[0].compareTo("beta") == 0){
-				this.beta = Double.parseDouble(parameter[1]);
-			}
-			else if(parameter[0].compareTo("topicSize") == 0){
-				this.topicSize = Integer.parseInt(parameter[1]);
-			}
-			else if(parameter[0].compareTo("iteration") == 0){
-				this.iteration = Integer.parseInt(parameter[1]);
-			}
-		}
-		br.close();
+		this.alpha = alpha;
+		this.beta = beta;
+		this.topicSize = topicSize;
+		this.iteration = iteration;
 	}
 }
