@@ -1,9 +1,7 @@
 package jLDAGibbsSampling;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 
-import util.IO;
 
 abstract class TopicModel {
 	//Default parameter
@@ -54,17 +52,16 @@ abstract class TopicModel {
 	 * @return newTopic : topic id
 	 */
 	public int sampleMultinomial(double[] p){
-		//Cumulative probability
+		//Cumulative probability, easy to sampling 
 		for(int topic_index = 1; topic_index < topicSize; topic_index++)
 			p[topic_index] += p[topic_index-1];
 		
-		double threshold = Math.random()*p[topicSize-1];
+		double threshold = Math.random()*p[topicSize-1];//sampling
 		int newTopic = 0;
 		for(;newTopic < topicSize; newTopic++)
 			if(threshold < p[newTopic])
 				break;
-		if(newTopic == topicSize)
-			newTopic--;
+
 		return newTopic;
 	}
 	

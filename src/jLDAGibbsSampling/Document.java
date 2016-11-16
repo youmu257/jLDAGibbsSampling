@@ -93,8 +93,7 @@ public class Document {
         		for(String word_origin : lin.split(" "))
         		{
         			String word = filtering(word_origin);
-        			if(word.compareTo("ax")==0)
-        				System.out.println(word_origin);
+
         			if(word.length() == 0)
         				continue;
         			else if(!distinct_words.contains(word))

@@ -22,7 +22,7 @@ class word_class{
 
 public class LDA extends TopicModel{
 	// K is topic size
-	private int K = this.topicSize;
+	private int K;
 	// V is number of distinct words
 	private int V;
 	// M is number of document
@@ -43,13 +43,17 @@ public class LDA extends TopicModel{
 	private double[][] phi;
 	//global variable
 	public Document doc;
+	//Cumulative Topic Result in each 50 iteration
+	private HashMap<Integer, HashMap<String,Integer>> CumulativeTopicResult = new HashMap<Integer,HashMap<String,Integer>>();
 	
 	public void LDA_Gibbs_Sampling(Document doc)
 	{
 		this.doc = doc;
 		InitParameter(doc.distinct_words.size(), doc.wordInDocument.size());
+		long stime = System.currentTimeMillis();
 		BuildMatrix(doc);
 		ModelInference();
+		System.out.println("Spend : "+(System.currentTimeMillis()-stime)/1000+" s");
 		
 		// update theta and phi
 		updateTheta();
@@ -59,6 +63,7 @@ public class LDA extends TopicModel{
 	public void InitParameter(int V, int M){
 		this.V = V;
 		this.M = M;
+		this.K = this.topicSize;
 		ntw = new int[K][V];
 		ndt = new int[M][K];
 		ntwSum = new int[K];
@@ -107,6 +112,39 @@ public class LDA extends TopicModel{
 					 int newtopic = samplingNewTopic(doc_index, word_index);//z.get(doc_index).get(word_index).word_id
 					 z.get(doc_index).get(word_index).topic = newtopic;
 				}
+			}
+			
+			//if iteration > (total iteration/2) , cumulative topic result to count that can reduce random sampling influence.
+			if(iter>this.iteration/2 && iter%50==0)
+			{
+				updatePhi();
+				for(int topic_index = 0; topic_index < phi.length; topic_index++)	
+				{	
+					if(!CumulativeTopicResult.containsKey(topic_index))
+						CumulativeTopicResult.put(topic_index, new HashMap<String,Integer>());
+					Map<String,Double> tmp_map = new HashMap<String,Double>();
+					for(int word_index = 0; word_index < phi[topic_index].length; word_index++)
+					{
+						tmp_map.put(doc.distinct_words.get(word_index), phi[topic_index][word_index]);
+					}
+					LinkedHashMap<String, Double> tmp = new LinkedHashMap<String, Double>();
+					tmp.putAll(MyJavaUtil.sortByComparatorDouble(tmp_map));
+					
+					//only cumulative top 10
+					int flag = 0;
+					for(Map.Entry<String, Double> e : tmp.entrySet())
+					{
+						String key = e.getKey();
+						if(CumulativeTopicResult.get(topic_index).containsKey(key))
+							CumulativeTopicResult.get(topic_index).put(key, CumulativeTopicResult.get(topic_index).get(key)+1);
+						else
+							CumulativeTopicResult.get(topic_index).put(key, 1);
+
+						flag++;
+						if(flag>10) break;
+					}
+				}
+				
 			}
 		}
 	}
@@ -186,6 +224,7 @@ public class LDA extends TopicModel{
 			}
 			System.out.println();
 		}
+		System.out.println("---------------------------------------------------");
 	}
 	
 	/**
@@ -230,7 +269,7 @@ public class LDA extends TopicModel{
 		bw.write("iteration:"+iteration+"\n"); 
 		bw.close();
 		
-		//write word in each topic
+		//write word in each topic in last iteration
 		bw = IO.Writer(path_result + "result.txt");
 		for(int topic_index = 0; topic_index < phi.length; topic_index++)	
 		{	
@@ -253,5 +292,26 @@ public class LDA extends TopicModel{
 			bw.write("\n");
 		}
 		bw.close();
+		
+		//write word in each topic over 100 iteration
+		bw = IO.Writer(path_result + "CumulativeTopicResult.txt");
+		for(int topic_index = 0; topic_index < CumulativeTopicResult.size(); topic_index++)	
+		{	
+			LinkedHashMap<String, Integer> tmp = new LinkedHashMap<String, Integer>();
+			tmp.putAll(MyJavaUtil.sortByComparatorInt(CumulativeTopicResult.get(topic_index)));
+		
+			bw.write(topic_index+":\t");
+			int flag = 1;
+			for(Map.Entry<String, Integer> e: tmp.entrySet())
+			{
+				bw.write(e.getKey()+"\t");
+				flag++;
+				if(flag>top) break;
+			}
+			bw.write("\n");
+		}
+		
+		bw.close();
 	}
+	
 }
