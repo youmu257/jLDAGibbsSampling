@@ -53,7 +53,7 @@ public class LDA extends TopicModel{
 		long stime = System.currentTimeMillis();
 		BuildMatrix(doc);
 		ModelInference();
-		System.out.println("Spend : "+(System.currentTimeMillis()-stime)/1000+" s");
+		System.out.println("LDA done!\nSpend : "+(System.currentTimeMillis()-stime)/1000+" s");
 		
 		// update theta and phi
 		updateTheta();
@@ -114,38 +114,9 @@ public class LDA extends TopicModel{
 				}
 			}
 			
-			//if iteration > (total iteration/2) , cumulative topic result to count that can reduce random sampling influence.
-			if(iter>this.iteration/2 && iter%50==0)
-			{
-				updatePhi();
-				for(int topic_index = 0; topic_index < phi.length; topic_index++)	
-				{	
-					if(!CumulativeTopicResult.containsKey(topic_index))
-						CumulativeTopicResult.put(topic_index, new HashMap<String,Integer>());
-					Map<String,Double> tmp_map = new HashMap<String,Double>();
-					for(int word_index = 0; word_index < phi[topic_index].length; word_index++)
-					{
-						tmp_map.put(doc.distinct_words.get(word_index), phi[topic_index][word_index]);
-					}
-					LinkedHashMap<String, Double> tmp = new LinkedHashMap<String, Double>();
-					tmp.putAll(MyJavaUtil.sortByComparatorDouble(tmp_map));
-					
-					//only cumulative top 10
-					int flag = 0;
-					for(Map.Entry<String, Double> e : tmp.entrySet())
-					{
-						String key = e.getKey();
-						if(CumulativeTopicResult.get(topic_index).containsKey(key))
-							CumulativeTopicResult.get(topic_index).put(key, CumulativeTopicResult.get(topic_index).get(key)+1);
-						else
-							CumulativeTopicResult.get(topic_index).put(key, 1);
-
-						flag++;
-						if(flag>10) break;
-					}
-				}
-				
-			}
+			//cumulative last 50 topic result to count that can reduce random sampling influence.
+			if(iter >= this.iteration-50)
+				updateCumulativeTopicResult();
 		}
 	}
 	
@@ -158,11 +129,13 @@ public class LDA extends TopicModel{
 	{
 		//remove word in document now
 		int origin_topic = z.get(m).get(n).topic;
-
-		--ntw[origin_topic][n];
+		int wid = z.get(m).get(n).word_id;
+		
+		--ntw[origin_topic][wid];
 		--ndt[m][origin_topic];
 		--ntwSum[origin_topic];
 		--ndtSum[m];
+
 		
 		double[] p = new double[K];
 		for(int topic_index = 0; topic_index < K ; topic_index++)
@@ -170,13 +143,16 @@ public class LDA extends TopicModel{
 			//_theta are represented co-occurrence influences
 			double _theta = (ndt[m][topic_index] + this.alpha) / (ndtSum[m] + K * this.alpha);
 			//_phi are represented the probability that a word will appear under each topic 
-			double _phi = (ntw[topic_index][z.get(m).get(n).word_id] + this.beta) / (ntwSum[topic_index] + V * this.beta);
+			double _phi = (ntw[topic_index][wid] + this.beta) / (ntwSum[topic_index] + V * this.beta);
+			if(_phi==0)
+				System.out.println();
 			p[topic_index] = _theta * _phi ;
 		}
 		
 		int newtopic = this.sampleMultinomial(p);
 		//update matrix by new topic
-		++ntw[newtopic][z.get(m).get(n).word_id];
+		z.get(m).get(n).topic = newtopic;
+		++ntw[newtopic][wid];
 		++ndt[m][newtopic];
 		++ntwSum[newtopic];
 		++ndtSum[m];
@@ -196,6 +172,40 @@ public class LDA extends TopicModel{
 		for(int topic_index = 0; topic_index < K; topic_index++)
 			for(int word_index = 0;word_index < V; word_index++)
 				phi[topic_index][word_index] = (ntw[topic_index][word_index] + this.beta) / (ntwSum[topic_index] + V * this.beta);
+	}
+	
+	/*
+	 * cumulative topic result to count that can reduce random sampling influence.
+	 */
+	public void updateCumulativeTopicResult()
+	{
+		updatePhi();
+		for(int topic_index = 0; topic_index < phi.length; topic_index++)	
+		{	
+			if(!CumulativeTopicResult.containsKey(topic_index))
+				CumulativeTopicResult.put(topic_index, new HashMap<String,Integer>());
+			Map<String,Double> tmp_map = new HashMap<String,Double>();
+			for(int word_index = 0; word_index < phi[topic_index].length; word_index++)
+			{
+				tmp_map.put(doc.distinct_words.get(word_index), phi[topic_index][word_index]);
+			}
+			LinkedHashMap<String, Double> tmp = new LinkedHashMap<String, Double>();
+			tmp.putAll(MyJavaUtil.sortByComparatorDouble(tmp_map));
+			
+			//only cumulative top 20
+			int flag = 0;
+			for(Map.Entry<String, Double> e : tmp.entrySet())
+			{
+				String key = e.getKey();
+				if(CumulativeTopicResult.get(topic_index).containsKey(key))
+					CumulativeTopicResult.get(topic_index).put(key, CumulativeTopicResult.get(topic_index).get(key)+1);
+				else
+					CumulativeTopicResult.get(topic_index).put(key, 1);
+
+				flag++;
+				if(flag>20) break;
+			}
+		}
 	}
 	
 	/**
@@ -224,7 +234,7 @@ public class LDA extends TopicModel{
 			}
 			System.out.println();
 		}
-		System.out.println("---------------------------------------------------");
+		System.out.println("-----------------------------------------------------------------------");
 	}
 	
 	/**
@@ -242,7 +252,7 @@ public class LDA extends TopicModel{
 			StringBuilder sb = new StringBuilder();
 			for(int word_index = 0; word_index < phi[topic_index].length; word_index++)
 			{
-				sb.append(phi[topic_index][word_index]+"\t");
+				sb.append(MyJavaUtil.round(phi[topic_index][word_index], 5)+"\t");
 			}
 			bw.write(sb.toString()+"\n");
 		}
@@ -253,9 +263,9 @@ public class LDA extends TopicModel{
 		for(int doc_index = 0; doc_index < theta.length; doc_index++)
 		{
 			StringBuilder sb = new StringBuilder();
-			for(int topic_index = 0; topic_index < theta[doc_index].length; topic_index++)
+			for(int topic_index = 0; topic_index < K; topic_index++)
 			{
-				sb.append(theta[doc_index][topic_index]+"\t");
+				sb.append(MyJavaUtil.round(theta[doc_index][topic_index], 5)+"\t");
 			}
 			bw.write(sb.toString()+"\n");
 		}
@@ -293,7 +303,7 @@ public class LDA extends TopicModel{
 		}
 		bw.close();
 		
-		//write word in each topic over 100 iteration
+		//write word in each topic over last 50 iteration
 		bw = IO.Writer(path_result + "CumulativeTopicResult.txt");
 		for(int topic_index = 0; topic_index < CumulativeTopicResult.size(); topic_index++)	
 		{	

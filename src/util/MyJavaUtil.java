@@ -1,5 +1,6 @@
 package util;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -9,6 +10,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class MyJavaUtil {
+	/**
+	 * Round half up k bits after decimal point
+	 */
+	public static double round(double num, int k){
+		return new BigDecimal(num).setScale(k, BigDecimal.ROUND_HALF_UP).doubleValue();
+	}
 	
 	//這個sort 使用完後建議在新建一個LinkedHashMap ,用putAll 的方式把排序結果放進去,不然有時再用get 會出問題
 	/**

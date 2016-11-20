@@ -7,7 +7,7 @@ import org.tartarus.snowball.ext.englishStemmer;
 public class Main {
 	private static String path = "data//DataInput//";
 	private static String path_output = "data//Result//";
-	private static int topci_num = 20;
+	private static int topci_num = 5;
 	
 	public static void main(String[] args) throws IOException
 	{

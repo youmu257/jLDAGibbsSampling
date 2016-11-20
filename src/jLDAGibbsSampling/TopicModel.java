@@ -61,7 +61,8 @@ abstract class TopicModel {
 		for(;newTopic < topicSize; newTopic++)
 			if(threshold < p[newTopic])
 				break;
-
+		if(newTopic==p.length)
+			newTopic--;
 		return newTopic;
 	}
 	
