@@ -43,7 +43,7 @@ public class LDA extends TopicModel{
 	private double[][] phi;
 	//global variable
 	public Document doc;
-	//Cumulative Topic Result in each 50 iteration
+	//Cumulative Topic Result in each last 50 iteration
 	private HashMap<Integer, HashMap<String,Integer>> CumulativeTopicResult = new HashMap<Integer,HashMap<String,Integer>>();
 	
 	public void LDA_Gibbs_Sampling(Document doc)
@@ -109,8 +109,7 @@ public class LDA extends TopicModel{
 			{
 				for(int word_index = 0;word_index < z.get(doc_index).size(); word_index++)
 				{
-					 int newtopic = samplingNewTopic(doc_index, word_index);//z.get(doc_index).get(word_index).word_id
-					 z.get(doc_index).get(word_index).topic = newtopic;
+					 samplingNewTopic(doc_index, word_index);
 				}
 			}
 			
@@ -144,8 +143,6 @@ public class LDA extends TopicModel{
 			double _theta = (ndt[m][topic_index] + this.alpha) / (ndtSum[m] + K * this.alpha);
 			//_phi are represented the probability that a word will appear under each topic 
 			double _phi = (ntw[topic_index][wid] + this.beta) / (ntwSum[topic_index] + V * this.beta);
-			if(_phi==0)
-				System.out.println();
 			p[topic_index] = _theta * _phi ;
 		}
 		
@@ -174,7 +171,7 @@ public class LDA extends TopicModel{
 				phi[topic_index][word_index] = (ntw[topic_index][word_index] + this.beta) / (ntwSum[topic_index] + V * this.beta);
 	}
 	
-	/*
+	/**
 	 * cumulative topic result to count that can reduce random sampling influence.
 	 */
 	public void updateCumulativeTopicResult()
