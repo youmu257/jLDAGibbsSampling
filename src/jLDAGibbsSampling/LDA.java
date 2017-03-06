@@ -359,6 +359,7 @@ public class LDA extends TopicModel{
 		this.V = doc.distinct_words.size();
 		br.close();
 		
+		//read phi
 		br = IO.Reader(path + "phi.txt");
 		phi = new double[this.K][doc.distinct_words.size()];
 		String lin = "";
@@ -368,6 +369,7 @@ public class LDA extends TopicModel{
 			String[] _phi = lin.split("\t");
 			for(int word_index=0; word_index<_phi.length; word_index++)
 				phi[topic_index][word_index] = Double.parseDouble(_phi[word_index]);
+			topic_index++;
 		}
 		br.close();
 	}
@@ -386,7 +388,8 @@ public class LDA extends TopicModel{
 				int word_id = doc.distinct_words.indexOf(word);
 				if(word_id < this.V)
 				{
-					int predWordTopic = this.sampleMultinomial( getWordTopic(word_id) );
+					double[] tmp = getWordTopic(word_id);
+					int predWordTopic = this.sampleMultinomial( tmp);
 					_theta[doc_index][predWordTopic]++;
 				}else{
 					//if model not contain this word, random select topic
