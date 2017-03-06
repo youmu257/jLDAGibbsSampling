@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.tartarus.snowball.SnowballStemmer;
 import util.IO;
@@ -106,4 +107,12 @@ public class Document {
         	wordInDocument.add(tmp_arr.toArray(new String[0]));
         }
 	}
+
+	public void ReadDistinctWordList(String path) throws IOException
+	{
+		BufferedReader br = IO.Reader(path);
+		distinct_words = new ArrayList<String>(Arrays.asList(br.readLine().split("\t")));
+		br.close();
+	}
+	
 }

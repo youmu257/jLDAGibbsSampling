@@ -1,11 +1,13 @@
 package jLDAGibbsSampling;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Random;
 
 import util.IO;
 import util.MyJavaUtil;
@@ -37,9 +39,9 @@ public class LDA extends TopicModel{
 	private int[] ntwSum;
 	//nwtSum is sum of word in document
 	private int[] ndtSum;
-	//theta in all document
+	//theta is doc-topic dice
 	private double[][] theta;
-	//phi in all document
+	//phi is topic-word dice
 	private double[][] phi;
 	//global variable
 	public Document doc;
@@ -236,6 +238,17 @@ public class LDA extends TopicModel{
 	}
 	
 	/**
+	 * input word_id and return word-topic vector by phi
+	 */
+	public double[] getWordTopic(int word_id)
+	{
+		double[] prob = new double[K];
+		for(int topic_index = 0; topic_index < K ;topic_index++)
+			prob[topic_index] = phi[topic_index][word_id];
+		return prob;
+	}
+	
+	/**
 	 * Write phi matrix, theta matrix and top k topic words
 	 * @param path_result : output folder path
 	 * @param top : top k number
@@ -320,6 +333,83 @@ public class LDA extends TopicModel{
 		}
 		
 		bw.close();
+		
+		bw = IO.Writer(path_result + "distinct_word_list.txt");
+		StringBuilder sb = new StringBuilder();
+		for(int i=0; i<doc.distinct_words.size(); i++)
+		{
+			sb.append(doc.distinct_words.get(i)).append("\t");
+			if(i%200==0){
+				bw.write(sb.toString());
+				sb = new StringBuilder();
+			}
+		}
+		bw.write(sb.toString());
+		bw.close();
 	}
 	
+	public void ReadModel(String path, Document doc) throws IOException
+	{
+		BufferedReader br = IO.Reader(path + "parameter.txt");
+		this.alpha = Double.parseDouble(br.readLine().split(":")[1]);
+		this.beta = Double.parseDouble(br.readLine().split(":")[1]);
+		this.K = Integer.parseInt(br.readLine().split(":")[1]);
+		this.iteration = Integer.parseInt(br.readLine().split(":")[1]);
+		this.setTopicSize(K);
+		this.V = doc.distinct_words.size();
+		br.close();
+		
+		br = IO.Reader(path + "phi.txt");
+		phi = new double[this.K][doc.distinct_words.size()];
+		String lin = "";
+		int topic_index = 0;
+		while((lin = br.readLine()) != null)
+		{
+			String[] _phi = lin.split("\t");
+			for(int word_index=0; word_index<_phi.length; word_index++)
+				phi[topic_index][word_index] = Double.parseDouble(_phi[word_index]);
+		}
+		br.close();
+	}
+	
+	public void TestingDocument(String output_path, Document doc) throws IOException
+	{
+		this.M = doc.wordInDocument.size();
+		int[][] _theta = new int[this.M][this.K];
+		int[] thetaSum = new int[this.M];
+		int doc_index = 0;
+		//predicting word topic
+		for(String[] review : doc.wordInDocument)
+		{
+			for(String word : review)
+			{
+				int word_id = doc.distinct_words.indexOf(word);
+				if(word_id < this.V)
+				{
+					int predWordTopic = this.sampleMultinomial( getWordTopic(word_id) );
+					_theta[doc_index][predWordTopic]++;
+				}else{
+					//if model not contain this word, random select topic
+					_theta[doc_index][(int)(Math.random()*this.K)]++;
+				}
+				thetaSum[doc_index]++;
+				
+			}
+			doc_index++;
+		}
+		
+		BufferedWriter bw = IO.Writer(output_path);
+		for(doc_index = 0; doc_index < this.M; doc_index++)
+		{
+			StringBuilder sb = new StringBuilder();
+			for(int topic_index = 0; topic_index < this.K; topic_index++)
+			{
+				double pred_theta = (_theta[doc_index][topic_index] + this.alpha) / (thetaSum[doc_index] + K * this.alpha);
+				sb.append(MyJavaUtil.round(pred_theta, 5)).append("\t");
+			}
+			sb.append("\n");
+			bw.write(sb.toString());
+		}
+		bw.close();
+	}
 }
