@@ -130,12 +130,8 @@ public class LDA extends TopicModel{
 		int origin_topic = z.get(m).get(n).topic;
 		int wid = z.get(m).get(n).word_id;
 		
-		--ntw[origin_topic][wid];
-		--ndt[m][origin_topic];
-		--ntwSum[origin_topic];
-		--ndtSum[m];
+		UpdateNormalCounter(wid, m, origin_topic, -1);
 
-		
 		double[] p = new double[K];
 		for(int topic_index = 0; topic_index < K ; topic_index++)
 		{
@@ -149,12 +145,17 @@ public class LDA extends TopicModel{
 		int newtopic = this.sampleMultinomial(p);
 		//update matrix by new topic
 		z.get(m).get(n).topic = newtopic;
-		++ntw[newtopic][wid];
-		++ndt[m][newtopic];
-		++ntwSum[newtopic];
-		++ndtSum[m];
+		UpdateNormalCounter(wid, m, newtopic, 1);
 		
 		return newtopic;
+	}
+	
+	public void UpdateNormalCounter(int word_id, int doc_id, int topic, int flag)
+	{
+		ntw[topic][word_id] += flag;
+		ndt[doc_id][topic] += flag;
+		ntwSum[topic] += flag;
+		ndtSum[doc_id] += flag;
 	}
 	
 	public void updateTheta()
