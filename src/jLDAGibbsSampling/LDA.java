@@ -139,7 +139,7 @@ public class LDA extends TopicModel{
 		{
 			//_theta are represented co-occurrence influences
 			double _theta = (ndt[m][topic_index] + this.alpha) / (ndtSum[m] + K * this.alpha);
-			//_phi are represented the probability that a word will appear under each topic 
+			//_phi are represented the probability that a word will appear under this topic 
 			double _phi = (ntw[topic_index][wid] + this.beta) / (ntwSum[topic_index] + V * this.beta);
 			p[topic_index] = _theta * _phi ;
 		}
