@@ -29,6 +29,10 @@ public class LDA extends TopicModel{
 	private int V;
 	// M is number of document
 	private int M;
+	// K_alpha is K * alpha
+	private double K_alpha;
+	// V_beta is V * beta
+	private double V_beta;
 	// z is topic of word in document
 	ArrayList<ArrayList<word_class>> z = new ArrayList<ArrayList<word_class>>();
 	// ntw is topic-word dice(words in topic)
@@ -66,6 +70,8 @@ public class LDA extends TopicModel{
 		this.V = V;
 		this.M = M;
 		this.K = this.topicSize;
+		this.V_beta = this.beta * V;
+		this.K_alpha = this.alpha * K;
 		ntw = new int[K][V];
 		ndt = new int[M][K];
 		ntwSum = new int[K];
@@ -142,9 +148,9 @@ public class LDA extends TopicModel{
 		for(int topic_index = 0; topic_index < K ; topic_index++)
 		{
 			//_theta are represented co-occurrence influences
-			double _theta = (ndt[m][topic_index] + this.alpha) / (ndtSum[m] + K * this.alpha);
+			double _theta = (ndt[m][topic_index] + alpha) / (ndtSum[m] + K_alpha);
 			//_phi are represented the probability that a word will appear under each topic 
-			double _phi = (ntw[topic_index][wid] + this.beta) / (ntwSum[topic_index] + V * this.beta);
+			double _phi = (ntw[topic_index][wid] + beta) / (ntwSum[topic_index] + V_beta);
 			p[topic_index] = _theta * _phi ;
 		}
 		
@@ -168,14 +174,14 @@ public class LDA extends TopicModel{
 	{
 		for(int doc_index = 0; doc_index < M; doc_index++)
 			for(int topic_index = 0;topic_index < K; topic_index++)
-				theta[doc_index][topic_index] = (ndt[doc_index][topic_index] + this.alpha) / (ndtSum[doc_index] + K * this.alpha);
+				theta[doc_index][topic_index] = (ndt[doc_index][topic_index] + alpha) / (ndtSum[doc_index] + K_alpha);
 	}
 	
 	public void updatePhi()
 	{
 		for(int topic_index = 0; topic_index < K; topic_index++)
 			for(int word_index = 0;word_index < V; word_index++)
-				phi[topic_index][word_index] = (ntw[topic_index][word_index] + this.beta) / (ntwSum[topic_index] + V * this.beta);
+				phi[topic_index][word_index] = (ntw[topic_index][word_index] + beta) / (ntwSum[topic_index] + V_beta);
 	}
 	
 	/**
