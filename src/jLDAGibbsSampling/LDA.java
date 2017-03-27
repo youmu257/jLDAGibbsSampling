@@ -104,6 +104,7 @@ public class LDA extends TopicModel{
 
 	public void ModelInference()
 	{
+		long stime = System.currentTimeMillis();
 		//Running model inference until iteration finish
 		for(int iter = 0; iter < this.iteration; iter++)
 		{
@@ -114,7 +115,10 @@ public class LDA extends TopicModel{
 					 samplingNewTopic(doc_index, word_index);
 				}
 			}
-			
+			if(iter%100==0){
+				System.out.println("iteration "+iter + " sepnd " +(System.currentTimeMillis()-stime)/1000 + " s");
+				stime = System.currentTimeMillis();
+			}
 			//cumulative last 50 topic result to count that can reduce random sampling influence.
 			if(iter >= this.iteration-50)
 				updateCumulativeTopicResult();
