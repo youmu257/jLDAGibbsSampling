@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Random;
 
 import util.IO;
 import util.MyJavaUtil;
@@ -34,7 +33,7 @@ public class LDA extends TopicModel{
 	// V_beta is V * beta
 	private double V_beta;
 	// z is topic of word in document
-	ArrayList<ArrayList<word_class>> z = new ArrayList<ArrayList<word_class>>();
+	word_class[][] z;
 	// ntw is topic-word dice(words in topic)
 	private int[][] ntw;
 	// ndt is doc-topic dice(topic in document)
@@ -82,7 +81,10 @@ public class LDA extends TopicModel{
 	
 	public void BuildMatrix(Document doc)
 	{
+		long stime = System.currentTimeMillis();
 		//random initial topic of word
+		int doc_flag = 0;
+		z = new word_class[doc.wordInDocument.size()][];
 		for(String[] word_in_doc : doc.wordInDocument)
 		{
 			ArrayList<word_class> tmp_z = new ArrayList<word_class>();
@@ -91,21 +93,17 @@ public class LDA extends TopicModel{
 				int random_topic = (int)(Math.random()*K);
 				word_class new_word = new word_class(doc.distinct_words.indexOf(word), random_topic);
 				tmp_z.add(new_word);
+				
+				ntw[new_word.topic][new_word.word_id]++;
+				ndt[doc_flag][new_word.topic]++;
+				ntwSum[new_word.topic]++;
+				ndtSum[doc_flag]++;
 			}
-			z.add(tmp_z);
+			z[doc_flag] = tmp_z.toArray(new word_class[0]);
+			doc_flag++;
 		}
-		
-		//building word-topic matrix and doc-topic matrix
-		for(int doc_index = 0; doc_index < M ; doc_index++)
-		{
-			for(word_class tmp_w : z.get(doc_index))
-			{
-				ntw[tmp_w.topic][tmp_w.word_id]++;
-				ndt[doc_index][tmp_w.topic]++;
-				ntwSum[tmp_w.topic]++;
-			}
-			ndtSum[doc_index] = z.get(doc_index).size();
-		}
+		System.out.println("Building Matrix Part 1 done! Spend " + (System.currentTimeMillis()-stime)/1000 + "s");
+		stime = System.currentTimeMillis();
 	}
 
 	public void ModelInference()
@@ -116,7 +114,7 @@ public class LDA extends TopicModel{
 		{
 			for(int doc_index = 0; doc_index < this.M; doc_index++)
 			{
-				for(int word_index = 0;word_index < z.get(doc_index).size(); word_index++)
+				for(int word_index = 0;word_index < z[doc_index].length; word_index++)
 				{
 					 samplingNewTopic(doc_index, word_index);
 				}
@@ -139,8 +137,8 @@ public class LDA extends TopicModel{
 	public int samplingNewTopic(int m, int n)
 	{
 		//remove word in document now
-		int origin_topic = z.get(m).get(n).topic;
-		int wid = z.get(m).get(n).word_id;
+		int origin_topic = z[m][n].topic;
+		int wid = z[m][n].word_id;
 		
 		UpdateNormalCounter(wid, m, origin_topic, -1);
 
@@ -156,7 +154,7 @@ public class LDA extends TopicModel{
 		
 		int newtopic = this.sampleMultinomial(p);
 		//update matrix by new topic
-		z.get(m).get(n).topic = newtopic;
+		z[m][n].topic = newtopic;
 		UpdateNormalCounter(wid, m, newtopic, 1);
 		
 		return newtopic;
