@@ -108,6 +108,37 @@ public class Document {
         }
 	}
 
+	public void ReadCorpusChinese(String dir_path) throws IOException
+	{
+		readStopWord();
+		
+		File dir = new File(dir_path);
+        for (File file : dir.listFiles())
+        {
+        	BufferedReader br = IO.Reader(file.getPath());
+        	
+        	String lin = "";
+        	while((lin = br.readLine()) != null)
+        	{
+        		ArrayList<String> tmp_arr = new ArrayList<String>();
+        		for(String word_origin : lin.split("\t"))
+        		{
+        			String word = word_origin.split(",")[0];
+        			String pos = word_origin.split(",")[1];
+
+        			if(word.length() < 2 || !pos.contains("n"))
+        				continue;
+        			else if(!distinct_words.contains(word))
+        				distinct_words.add(word);
+        			tmp_arr.add(word);
+        		}
+        		wordInDocument.add(tmp_arr.toArray(new String[0]));
+        	}
+        	br.close();
+        }
+	}
+
+	
 	public void ReadDistinctWordList(String path) throws IOException
 	{
 		BufferedReader br = IO.Reader(path);

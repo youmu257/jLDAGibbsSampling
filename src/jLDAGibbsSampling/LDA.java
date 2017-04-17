@@ -29,9 +29,9 @@ public class LDA extends TopicModel{
 	// M is number of document
 	private int M;
 	// K_alpha is K * alpha
-	private double K_alpha;
+	private double alphaSum;
 	// V_beta is V * beta
-	private double V_beta;
+	private double betaSum;
 	// z is topic of word in document
 	word_class[][] z;
 	// ntw is topic-word dice(words in topic)
@@ -69,8 +69,8 @@ public class LDA extends TopicModel{
 		this.V = V;
 		this.M = M;
 		this.K = this.topicSize;
-		this.V_beta = this.beta * V;
-		this.K_alpha = this.alpha * K;
+		this.betaSum = this.beta * V;
+		this.alphaSum = this.alpha * K;
 		ntw = new int[K][V];
 		ndt = new int[M][K];
 		ntwSum = new int[K];
@@ -123,9 +123,19 @@ public class LDA extends TopicModel{
 				System.out.println("iteration "+iter + " sepnd " +(System.currentTimeMillis()-stime)/1000 + " s");
 				stime = System.currentTimeMillis();
 			}
+		}
+		
+		//estimate
+		for(int iter = 0; iter < this.estimate_iteration; iter++)
+		{
+			for(int doc_index = 0; doc_index < this.M; doc_index++)
+				for(int word_index = 0;word_index < z[doc_index].length; word_index++)
+					 samplingNewTopic(doc_index, word_index);
+			
 			//cumulative last 50 topic result to count that can reduce random sampling influence.
-			if(iter >= this.iteration-50)
-				updateCumulativeTopicResult();
+			updateTheta();
+			updatePhi();
+			updateCumulativeTopicResult();
 		}
 	}
 	
@@ -146,9 +156,9 @@ public class LDA extends TopicModel{
 		for(int topic_index = 0; topic_index < K ; topic_index++)
 		{
 			//_theta are represented co-occurrence influences
-			double _theta = (ndt[m][topic_index] + alpha) / (ndtSum[m] + K_alpha);
+			double _theta = (ndt[m][topic_index] + alpha) / (ndtSum[m] + alphaSum);
 			//_phi are represented the probability that a word will appear under each topic 
-			double _phi = (ntw[topic_index][wid] + beta) / (ntwSum[topic_index] + V_beta);
+			double _phi = (ntw[topic_index][wid] + beta) / (ntwSum[topic_index] + betaSum);
 			p[topic_index] = _theta * _phi ;
 		}
 		
@@ -172,14 +182,14 @@ public class LDA extends TopicModel{
 	{
 		for(int doc_index = 0; doc_index < M; doc_index++)
 			for(int topic_index = 0;topic_index < K; topic_index++)
-				theta[doc_index][topic_index] = (ndt[doc_index][topic_index] + alpha) / (ndtSum[doc_index] + K_alpha);
+				theta[doc_index][topic_index] += (ndt[doc_index][topic_index] + alpha) / (ndtSum[doc_index] + alphaSum);
 	}
 	
 	public void updatePhi()
 	{
 		for(int topic_index = 0; topic_index < K; topic_index++)
-			for(int word_index = 0;word_index < V; word_index++)
-				phi[topic_index][word_index] = (ntw[topic_index][word_index] + beta) / (ntwSum[topic_index] + V_beta);
+			for(int word_id = 0; word_id < V; word_id++)
+				phi[topic_index][word_id] += (ntw[topic_index][word_id] + beta) / (ntwSum[topic_index] + betaSum);
 	}
 	
 	/**
@@ -187,7 +197,6 @@ public class LDA extends TopicModel{
 	 */
 	public void updateCumulativeTopicResult()
 	{
-		updatePhi();
 		for(int topic_index = 0; topic_index < phi.length; topic_index++)	
 		{	
 			if(!CumulativeTopicResult.containsKey(topic_index))
@@ -228,7 +237,7 @@ public class LDA extends TopicModel{
 			Map<String,Double> tmp_map = new HashMap<String,Double>();
 			for(int word_index = 0; word_index < phi[topic_index].length; word_index++)
 			{
-				tmp_map.put(doc.distinct_words.get(word_index), phi[topic_index][word_index]);
+				tmp_map.put(doc.distinct_words.get(word_index), phi[topic_index][word_index] / estimate_iteration );
 			}
 			LinkedHashMap<String, Double> tmp = new LinkedHashMap<String, Double>();
 			tmp.putAll(MyJavaUtil.sortByComparatorDouble(tmp_map));
@@ -236,7 +245,8 @@ public class LDA extends TopicModel{
 			int flag = 1;
 			for(Map.Entry<String, Double> e : tmp.entrySet())
 			{
-				System.out.print(e.getKey()+"\t");//+","+e.getValue()
+//				System.out.print(e.getKey()+"\t");//+","+e.getValue()
+				System.out.print(e.getKey()+","+e.getValue()+"\t");
 				flag++;
 				if(flag>top) break;
 			}
@@ -271,7 +281,7 @@ public class LDA extends TopicModel{
 			StringBuilder sb = new StringBuilder();
 			for(int word_index = 0; word_index < phi[topic_index].length; word_index++)
 			{
-				sb.append(MyJavaUtil.round(phi[topic_index][word_index], 5)+"\t");
+				sb.append(MyJavaUtil.round(phi[topic_index][word_index] / estimate_iteration, 5)+"\t");
 			}
 			bw.write(sb.toString()+"\n");
 		}
@@ -284,7 +294,7 @@ public class LDA extends TopicModel{
 			StringBuilder sb = new StringBuilder();
 			for(int topic_index = 0; topic_index < K; topic_index++)
 			{
-				sb.append(MyJavaUtil.round(theta[doc_index][topic_index], 5)+"\t");
+				sb.append(MyJavaUtil.round(theta[doc_index][topic_index] / estimate_iteration, 5)+"\t");
 			}
 			bw.write(sb.toString()+"\n");
 		}
@@ -295,7 +305,8 @@ public class LDA extends TopicModel{
 		bw.write("alpha:"+alpha+"\n");
 		bw.write("beta:"+beta+"\n");
 		bw.write("topicSize:"+topicSize+"\n");
-		bw.write("iteration:"+iteration+"\n"); 
+		bw.write("iteration:"+iteration+"\n");
+		bw.write("estimate_iteration:"+estimate_iteration+"\n");
 		bw.close();
 		
 		//write word in each topic in last iteration
@@ -306,7 +317,7 @@ public class LDA extends TopicModel{
 			Map<String,Double> tmp_map = new HashMap<String,Double>();
 			for(int word_index = 0; word_index < phi[topic_index].length; word_index++)
 			{
-				tmp_map.put(doc.distinct_words.get(word_index), phi[topic_index][word_index]);
+				tmp_map.put(doc.distinct_words.get(word_index), phi[topic_index][word_index] / estimate_iteration);
 			}
 			LinkedHashMap<String, Double> tmp = new LinkedHashMap<String, Double>();
 			tmp.putAll(MyJavaUtil.sortByComparatorDouble(tmp_map));
@@ -363,6 +374,7 @@ public class LDA extends TopicModel{
 		this.beta = Double.parseDouble(br.readLine().split(":")[1]);
 		this.K = Integer.parseInt(br.readLine().split(":")[1]);
 		this.iteration = Integer.parseInt(br.readLine().split(":")[1]);
+		this.estimate_iteration = Integer.parseInt(br.readLine().split(":")[1]);
 		this.setTopicSize(K);
 		this.V = doc.distinct_words.size();
 		br.close();

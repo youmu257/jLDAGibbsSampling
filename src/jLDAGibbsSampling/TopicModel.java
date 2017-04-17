@@ -1,14 +1,12 @@
 package jLDAGibbsSampling;
 
-import java.io.IOException;
-
-
 abstract class TopicModel {
 	//Default parameter
 	protected double alpha = 0.1;
 	protected double beta = 0.01;
 	protected int topicSize = 10;
 	protected int iteration = 100;
+	protected int estimate_iteration = 25;
 	
 	//Setting alpha parameter which affects topic selection
 	public void setAlpha(double alpha){
@@ -66,11 +64,12 @@ abstract class TopicModel {
 		return newTopic;
 	}
 	
-	public void setParameter(double alpha, double beta, int topicSize, int iteration) throws IOException
+	public void setParameter(double alpha, double beta, int topicSize, int iteration, int estimate_iteration)
 	{
 		this.alpha = alpha;
 		this.beta = beta;
 		this.topicSize = topicSize;
 		this.iteration = iteration;
+		this.estimate_iteration = estimate_iteration;
 	}
 }
