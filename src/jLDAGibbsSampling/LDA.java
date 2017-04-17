@@ -135,7 +135,6 @@ public class LDA extends TopicModel{
 			//cumulative last 50 topic result to count that can reduce random sampling influence.
 			updateTheta();
 			updatePhi();
-			updateCumulativeTopicResult();
 		}
 	}
 	
@@ -190,39 +189,6 @@ public class LDA extends TopicModel{
 		for(int topic_index = 0; topic_index < K; topic_index++)
 			for(int word_id = 0; word_id < V; word_id++)
 				phi[topic_index][word_id] += (ntw[topic_index][word_id] + beta) / (ntwSum[topic_index] + betaSum);
-	}
-	
-	/**
-	 * cumulative topic result to count that can reduce random sampling influence.
-	 */
-	public void updateCumulativeTopicResult()
-	{
-		for(int topic_index = 0; topic_index < phi.length; topic_index++)	
-		{	
-			if(!CumulativeTopicResult.containsKey(topic_index))
-				CumulativeTopicResult.put(topic_index, new HashMap<String,Integer>());
-			Map<String,Double> tmp_map = new HashMap<String,Double>();
-			for(int word_index = 0; word_index < phi[topic_index].length; word_index++)
-			{
-				tmp_map.put(doc.distinct_words.get(word_index), phi[topic_index][word_index]);
-			}
-			LinkedHashMap<String, Double> tmp = new LinkedHashMap<String, Double>();
-			tmp.putAll(MyJavaUtil.sortByComparatorDouble(tmp_map));
-			
-			//only cumulative top 20
-			int flag = 0;
-			for(Map.Entry<String, Double> e : tmp.entrySet())
-			{
-				String key = e.getKey();
-				if(CumulativeTopicResult.get(topic_index).containsKey(key))
-					CumulativeTopicResult.get(topic_index).put(key, CumulativeTopicResult.get(topic_index).get(key)+1);
-				else
-					CumulativeTopicResult.get(topic_index).put(key, 1);
-
-				flag++;
-				if(flag>20) break;
-			}
-		}
 	}
 	
 	/**
@@ -331,26 +297,6 @@ public class LDA extends TopicModel{
 			}
 			bw.write("\n");
 		}
-		bw.close();
-		
-		//write word in each topic over last 50 iteration
-		bw = IO.Writer(path_result + "CumulativeTopicResult.txt");
-		for(int topic_index = 0; topic_index < CumulativeTopicResult.size(); topic_index++)	
-		{	
-			LinkedHashMap<String, Integer> tmp = new LinkedHashMap<String, Integer>();
-			tmp.putAll(MyJavaUtil.sortByComparatorInt(CumulativeTopicResult.get(topic_index)));
-		
-			bw.write(topic_index+":\t");
-			int flag = 1;
-			for(Map.Entry<String, Integer> e: tmp.entrySet())
-			{
-				bw.write(e.getKey()+"\t");
-				flag++;
-				if(flag>top) break;
-			}
-			bw.write("\n");
-		}
-		
 		bw.close();
 		
 		bw = IO.Writer(path_result + "distinct_word_list.txt");

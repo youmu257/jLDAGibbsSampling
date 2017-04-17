@@ -30,6 +30,5 @@ public class Main {
 		lda.LDA_Gibbs_Sampling(doc);
 		lda.printWordInTopic(30);
 		lda.writeResult(path_output, 10);
-
 	}
 }
