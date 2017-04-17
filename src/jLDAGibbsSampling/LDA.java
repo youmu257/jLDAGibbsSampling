@@ -158,6 +158,7 @@ public class LDA extends TopicModel{
 			double _theta = (ndt[m][topic_index] + alpha) / (ndtSum[m] + alphaSum);
 			//_phi are represented the probability that a word will appear under each topic 
 			double _phi = (ntw[topic_index][wid] + beta) / (ntwSum[topic_index] + betaSum);
+
 			p[topic_index] = _theta * _phi ;
 		}
 		
